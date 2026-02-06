@@ -96,16 +96,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
-            intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
-                extractUrl(text)?.let { url ->
-                    statusText.text = "📡 Sending video..."
-                    sendToPc(url)
-                } ?: run {
-                    statusText.text = "❌ No URL found"
-                    showToast("No video URL found")
-                }
-            }
+        intent ?: return
+
+        val url: String? = when {
+            intent.action == Intent.ACTION_SEND && intent.type == "text/plain" ->
+                intent.getStringExtra(Intent.EXTRA_TEXT)?.let { extractUrl(it) }
+
+            intent.action == Intent.ACTION_VIEW ->
+                intent.dataString?.let { extractUrl(it) }
+
+            else -> null
+        }
+
+        if (url != null) {
+            statusText.text = "📡 Sending video..."
+            sendToPc(url)
+        } else if (intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_VIEW) {
+            statusText.text = "❌ No URL found"
+            showToast("No video URL found")
         }
     }
 
